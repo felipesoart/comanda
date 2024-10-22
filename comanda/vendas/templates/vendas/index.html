@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Realizar Pedido</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'vendas/styles.css' %}">
+
+</head>
+
+<body>
+    <div class="container">
+       
+        <form id="pedido-form" method="POST" action="{% url 'processar_pedido' %}">
+            {% csrf_token %}
+
+            <!-- Exibir dados da empresa se necessário -->
+            <div id="dados-empresa">
+                <h2>Dados da Empresa</h2>
+                {% for empresa in dados_empresa %}
+                <p>Nome: {{ empresa.NOME_EMPRESA }} (CPF/CNPJ): {{ empresa.CPF_CNPJ }}</p>
+                {% endfor %}
+            </div>
+
+            <h1>Fazer Pedido</h1>
+
+            <!-- Dropdown de Produtos -->
+            <label for="produto">Produto:</label>
+            <select name="produto" id="produto">
+                {% for produto in produtos %}
+                <option value="{{ produto.DESCRICAO }}">{{ produto.DESCRICAO }} - R$ {{ produto.VALOR }}</option>
+                {% endfor %}
+            </select>
+
+            <!-- Campo para a quantidade -->
+            <label for="quantidade">Quantidade:</label>
+            <input type="number" name="quantidade" id="quantidade" min="1">
+
+
+
+            <!-- Botão de adicionar -->
+            <button type="button" onclick="adicionarProduto()">Adicionar</button>
+
+            <!-- Grid para exibir produtos selecionados -->
+            <div id="produtos-grid"></div>
+            <div id="total">Total: R$ 0.00</div>
+
+            <!-- Campo para Cliente -->
+            <label for="cliente">Cliente:</label>
+            <input type="text" name="cliente" id="cliente">
+
+            <!-- Dropdown de Operadores -->
+            <label for="operador">Operador:</label>
+            <select name="operador" id="operador">
+                {% for operador in operadores %}
+                <option value="{{ operador }}">{{ operador }}</option>
+                {% endfor %}
+            </select>
+
+            <!-- Forma de pagamento -->
+            <label for="forma_pagamento">Forma de Pagamento:</label>
+            <select name="forma_pagamento" id="forma_pagamento">
+                <option value="Dinheiro">Dinheiro</option>
+                <option value="Cartão">Cartão</option>
+                <option value="Pix">Pix</option>
+                <option value="Fiado">Fiado</option>
+            </select>
+
+            <!-- Botão de finalizar pedido -->
+            <button type="button" id="finalizarPedido">Finalizar Pedido</button>
+            <button type="button" id="imprimirPedido" class="btndisabled buttonCinza">Impressão Grande</button>
+            <button type="button" id="imprimirPedidoP" class="btndisabled buttonCinza">Impressão Pequena</button>
+            <button type="button" id="outroPedido" class="btndisabled buttonCinza">Outro Pedido</button>
+        </form>
+
+        
+    </div>
+
+    <script>
+        let produtosSelecionados = [];
+
+        function adicionarProduto() {
+            const produtoSelect = document.getElementById("produto");
+            const quantidadeInput = document.getElementById("quantidade");
+            const produtoSelecionado = produtoSelect.value;
+            const quantidade = parseInt(quantidadeInput.value);
+
+            if (produtoSelecionado && quantidade > 0) {
+                const descricao = produtoSelect.options[produtoSelect.selectedIndex].text;
+                const valor = parseFloat(descricao.split(" - R$ ")[1]);
+                produtosSelecionados.push({ descricao: produtoSelecionado, quantidade: quantidade, valor: valor });
+
+                atualizarGrid();
+                quantidadeInput.value = ""; // Limpa o campo de quantidade
+            }
+        }
+
+        function removerProduto(index) {
+            produtosSelecionados.splice(index, 1);
+            atualizarGrid();
+        }
+
+        function atualizarGrid() {
+            const grid = document.getElementById("produtos-grid");
+            grid.innerHTML = "";
+
+            let total = 0;
+
+            produtosSelecionados.forEach((produto, index) => {
+                const row = document.createElement("div");
+                row.className = "produto-item";
+                row.innerHTML = `
+                    <span>${produto.descricao} - ${produto.quantidade} un - R$ ${produto.valor.toFixed(2)}</span>
+                    <button onclick="removerProduto(${index})" class="buttonRed">Remover</button>
+                `;
+                grid.appendChild(row);
+                total += produto.valor * produto.quantidade;
+            });
+
+            // Atualiza o total
+            const totalElement = document.getElementById("total");
+            totalElement.textContent = `Total: R$ ${total.toFixed(2)}`;
+        }
+
+        // Adiciona o event listener para o botão finalizar
+        document.getElementById("finalizarPedido").addEventListener("click", finalizarPedido);
+
+        function finalizarPedido() {
+            //console.log("finalizarPedido chamado");
+            const finalizarButton = document.getElementById("finalizarPedido");
+            const imprimirPedidoButton = document.getElementById("imprimirPedido");
+            const imprimirPedidoPButton = document.getElementById("imprimirPedidoP");
+            const outroPedidoButton = document.getElementById("outroPedido");
+            if (produtosSelecionados.length > 0) {
+                const formData = new FormData(document.getElementById("pedido-form"));
+
+                // Adiciona os produtos ao formData
+                formData.append('produtos', JSON.stringify(produtosSelecionados));
+
+                fetch("{% url 'processar_pedido' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    },
+                    body: formData
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            return response.text();
+                        } else {
+                            throw new Error('Erro ao processar o pedido.');
+                        }
+                    })
+                    .then(data => {
+                        finalizarButton.classList.add("btndisabled"); // Adiciona a classe para desabilitar o botão
+                        imprimirPedidoButton.classList.remove("btndisabled"); // Adiciona a classe para desabilitar o botão
+                        imprimirPedidoPButton.classList.remove("btndisabled"); // Adiciona a classe para desabilitar o botão
+                        outroPedidoButton.classList.remove("btndisabled"); // Adiciona a classe para desabilitar o botão
+                        alert('Pedido processado com sucesso!');
+
+                        // Limpa o grid e os produtos selecionados
+                        //produtosSelecionados = [];
+                        //atualizarGrid();
+                    })
+                    .catch(error => {
+                        finalizarButton.classList.remove("btndisabled"); // Remove a classe em caso de erro
+                        imprimirPedidoButton.classList.add("btndisabled"); // Adiciona a classe para desabilitar o botão
+                        imprimirPedidoPButton.classList.add("btndisabled"); // Adiciona a classe para desabilitar o botão
+                        outroPedidoButton.classList.add("btndisabled"); // Adiciona a classe para desabilitar o botão
+                        alert(error.message);
+
+                    });
+            } else {
+                alert("Adicione pelo menos um produto antes de finalizar o pedido.");
+            }
+        }
+
+        // Adiciona o event listener para o botão 
+        document.getElementById("outroPedido").addEventListener("click", outroPedido);
+
+        function outroPedido() {
+            //console.log("outroPedido chamado");
+            const finalizarButton = document.getElementById("finalizarPedido");
+            const imprimirPedidoButton = document.getElementById("imprimirPedido");
+            const imprimirPedidoPButton = document.getElementById("imprimirPedidoP");
+            const outroPedidoButton = document.getElementById("outroPedido");
+            finalizarButton.classList.remove("btndisabled"); // Remove a classe em caso de erro
+            imprimirPedidoButton.classList.add("btndisabled"); // Adiciona a classe para desabilitar o botão
+            imprimirPedidoPButton.classList.add("btndisabled"); // Adiciona a classe para desabilitar o botão
+            outroPedidoButton.classList.add("btndisabled"); // Adiciona a classe para desabilitar o botão
+            // Limpa o grid e os produtos selecionados
+            produtosSelecionados = [];
+            atualizarGrid();
+        }
+
+        // Adiciona o event listener para o botão 
+        document.getElementById("imprimirPedido").addEventListener("click", imprimirPedido);
+
+        function imprimirPedido() {
+            // Fetch to get the last order details
+            console.log("imprimirPedido chamado");
+            fetch('/obter_ultimo_pedido/')
+                .then(response => response.json())
+                .then(data => {
+                    const cliente = document.getElementById("cliente").value;
+                    const operador = document.getElementById("operador").value;
+                    const formaPagamento = document.getElementById("forma_pagamento").value;
+                    const totalElement = document.getElementById("total").textContent;
+                    const produtosGrid = document.getElementById("produtos-grid");
+
+                    // Pega o nome da empresa do HTML
+                    const nomeEmpresa = document.querySelector('#dados-empresa p').textContent.split(':')[1].split(' (')[0].trim();
+
+                    let produtosHtml = '';
+                    let subtotal = 0;
+
+                    produtosSelecionados.forEach(produto => {
+                        const valor = produto.valor * produto.quantidade;
+                        subtotal += valor;
+                        produtosHtml += `
+                    <tr>
+                        <td>${produto.quantidade}</td>
+                        <td>${produto.descricao}</td>
+                        <td>${produto.valor.toFixed(2)}</td>
+                        <td>${valor.toFixed(2)}</td>
+                    </tr>
+                `;
+                    });
+
+                    const imprimirConteudo = `
+                <h1 style="text-align: center;">${nomeEmpresa}</h1>
+                <h2 style="text-align: center;">** VENDA BALCÃO **</h2>
+                <p style="text-align: center;">Controle No. ${data.controle_num}</p>
+                <p style="text-align: left;">Operador: ${operador}</p>
+                <p style="text-align: left;">Data Hr: ${data.data_hora}</p>
+                <table border="1" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Qtd</th>
+                            <th>DESCRIÇÃO</th>
+                            <th>PREÇO</th>
+                            <th>VALOR</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${produtosHtml}
+                    </tbody>
+                </table>
+                <p style="text-align: right;">SUBTOTAL: ${subtotal.toFixed(2)}</p>
+                <p style="text-align: right;">TOTAL: ${totalElement.replace('Total: R$ ', '')}</p>
+                <p style="text-align: right;">Forma de Pagamento: ${formaPagamento}</p>
+                <p style="text-align: center;">------ Não tem valor fiscal ------</p>                
+            `;
+
+                    const novaJanela = window.open('', '_blank');
+                    novaJanela.document.write(`
+                <html>
+                    <head>
+                        <title>Imprimir Pedido</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; }
+                            table { border-collapse: collapse; width: 100%; }
+                            th, td { padding: 8px; text-align: left; border: 1px solid #ddd; }
+                        </style>
+                    </head>
+                    <body onload="window.print(); window.close();">
+                        ${imprimirConteudo}
+                    </body>
+                </html>
+            `);
+                    novaJanela.document.close();
+                })
+                .catch(error => {
+                    console.error('Erro ao obter os dados do pedido:', error);
+                });
+        }
+
+        // Adiciona o event listener para o botão 
+        document.getElementById("imprimirPedidoP").addEventListener("click", imprimirPedidoP);
+
+        function imprimirPedidoP() {
+            console.log("imprimirPedidoP chamado");
+            // Fetch to get the last order details
+            fetch('/obter_ultimo_pedido/')
+                .then(response => response.json())
+                .then(data => {
+                    const cliente = document.getElementById("cliente").value;
+                    const operador = document.getElementById("operador").value;
+                    const formaPagamento = document.getElementById("forma_pagamento").value;
+                    const totalElement = document.getElementById("total").textContent;
+
+                    // Pega o nome da empresa do HTML
+                    const nomeEmpresa = document.querySelector('#dados-empresa p').textContent.split(':')[1].split(' (')[0].trim();
+
+                    let produtosHtml = '';
+                    let subtotal = 0;
+
+                    produtosSelecionados.forEach(produto => {
+                        const valor = produto.valor * produto.quantidade;
+                        subtotal += valor;
+                        const descricao = produto.descricao.length > 18 ? produto.descricao.substring(0, 18) + '...' : produto.descricao;
+                        produtosHtml += `
+                    <tr>
+                        <td style="text-align: left;">${produto.quantidade}</td>
+                        <td style="text-align: left;">${descricao}</td>
+                        <td style="text-align: right;">${produto.valor.toFixed(2)}</td>
+                        <td style="text-align: right;">${valor.toFixed(2)}</td>
+                    </tr>
+                `;
+                    });
+
+                    const imprimirConteudo = `
+                <div style="width: 8cm; margin: auto; font-size: 12px;">
+                    <h1 style="text-align: center;">${nomeEmpresa}</h1>
+                    <h2 style="text-align: center;">** VENDA BALCÃO **</h2>
+                    <p style="text-align: center;">Controle No. ${data.controle_num}</p>
+                    <p style="text-align: left;">Operador: ${operador}</p>
+                    <p style="text-align: left;">Data Hr: ${data.data_hora}</p>
+                    <hr>
+                    <table style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th style="text-align: left;">Qtd</th>
+                                <th style="text-align: left;">DESCRIÇÃO</th>
+                                <th style="text-align: right;">PREÇO</th>
+                                <th style="text-align: right;">VALOR</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${produtosHtml}
+                        </tbody>
+                    </table>
+                    <hr>
+                    <p style="text-align: right;">SUBTOTAL: ${subtotal.toFixed(2)}</p>
+                    <p style="text-align: right;">TOTAL: ${totalElement.replace('Total: R$ ', '')}</p>
+                    <p style="text-align: right;">Forma de Pagamento: ${formaPagamento}</p>
+                    <p style="text-align: center;">------ Não tem valor fiscal ------</p>
+                </div>
+            `;
+
+                    const novaJanela = window.open('', '_blank');
+                    novaJanela.document.write(`
+                <html>
+                    <head>
+                        <title>Imprimir Pedido</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; }
+                            table { border-collapse: collapse; width: 100%; }
+                            th, td { padding: 5px; }
+                        </style>
+                    </head>
+                    <body onload="window.print(); window.close();">
+                        ${imprimirConteudo}
+                    </body>
+                </html>
+            `);
+                    novaJanela.document.close();
+                })
+                .catch(error => {
+                    console.error('Erro ao obter os dados do pedido:', error);
+                });
+        }
+
+    </script>
+</body>
+
+</html>

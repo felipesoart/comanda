@@ -1,0 +1,143 @@
+/* Reset básico de margens e preenchimentos */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Estilizando o corpo da página */
+body {
+    font-family: Arial, sans-serif; /* Fonte padrão */
+    line-height: 1.6; /* Espaçamento entre linhas */
+    background-color: #f4f4f4; /* Cor de fundo */
+    color: #333; /* Cor do texto */
+}
+
+/* Estilizando o cabeçalho */
+h1 {
+    text-align: center; /* Centraliza o título */
+    margin: 20px 0; /* Margem em cima e embaixo */
+    color: #4CAF50; /* Cor do título */
+}
+
+/* Container para os produtos */
+.container {
+    max-width: 800px; /* Largura máxima */
+    margin: 20px auto; /* Margem automática para centralizar */
+    padding: 20px; /* Preenchimento interno */
+    background-color: #fff; /* Cor de fundo do container */
+    border-radius: 8px; /* Cantos arredondados */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Sombra do container */
+}
+
+/* Estilo para os inputs e selects */
+input[type="number"], 
+select {
+    width: calc(100% - 20px); /* Largura total com margem */
+    padding: 10px; /* Preenchimento interno */
+    margin-bottom: 15px; /* Margem embaixo */
+    border: 1px solid #ccc; /* Borda padrão */
+    border-radius: 4px; /* Cantos arredondados */
+    font-size: 1em; /* Tamanho da fonte */
+}
+
+#cliente {
+    width: 97.5%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1em;
+}
+
+/* Estilo para os botões */
+button {
+    background-color: #4CAF50; /* Cor de fundo do botão */
+    color: white; /* Cor do texto */
+    border: none; /* Remove bordas */
+    border-radius: 4px; /* Cantos arredondados */
+    padding: 10px 15px; /* Preenchimento interno */
+    cursor: pointer; /* Muda o cursor para mão */
+    font-size: 1em; /* Tamanho da fonte */
+    transition: background-color 0.3s ease; /* Efeito de transição */
+}
+
+button:hover {
+    background-color: #45a049; /* Cor do botão ao passar o mouse */
+}
+
+/* Estilo para o grid de produtos */
+#produtos-grid {
+    margin-top: 20px; /* Margem superior */
+    padding: 10px; /* Preenchimento interno */
+    border: 1px solid #ccc; /* Borda do grid */
+    border-radius: 4px; /* Cantos arredondados */
+    background-color: #f9f9f9; /* Cor de fundo do grid */
+}
+
+.produto-item {
+    display: flex; /* Flexbox para alinhamento */
+    justify-content: space-between; /* Espaço entre itens */
+    padding: 10px; /* Preenchimento interno */
+    border-bottom: 1px solid #ddd; /* Linha separadora */
+}
+
+.produto-item:last-child {
+    border-bottom: none; /* Remove a linha do último item */
+}
+
+/* Estilo para o total */
+#total {
+    font-size: 1.2em; /* Tamanho da fonte do total */
+    font-weight: bold; /* Negrito */
+    margin-top: 10px; /* Margem superior */
+    text-align: right; /* Alinha à direita */
+}
+
+/* Estilo para os dados da empresa */
+#dados-empresa {
+    margin-top: 20px; /* Margem superior */
+    padding: 10px; /* Preenchimento interno */
+    background-color: #f0f0f0; /* Cor de fundo */
+    border-radius: 4px; /* Cantos arredondados */
+    border: 1px solid #ccc; /* Borda */
+}
+
+.btndisabled {
+    background-color: #ccc; /* Cor de fundo cinza */
+    color: #666; /* Cor do texto cinza */
+    cursor: not-allowed; /* Cursor de "não permitido" */
+    pointer-events: none; /* Impede a interação com o botão */
+}
+
+/* Estilo para os botões */
+.buttonCinza {
+    background-color: #30c5fc; /* Cor de fundo do botão */
+    color: black; /* Cor do texto */
+    border: none; /* Remove bordas */
+    border-radius: 4px; /* Cantos arredondados */
+    padding: 10px 15px; /* Preenchimento interno */
+    cursor: pointer; /* Muda o cursor para mão */
+    font-size: 1em; /* Tamanho da fonte */
+    transition: background-color 0.3s ease; /* Efeito de transição */
+}
+
+.buttonCinza:hover {
+    background-color: #2598c2; /* Cor do botão ao passar o mouse */
+}
+
+/* Estilo para os botões */
+.buttonRed {
+    background-color: #ff1c1c; /* Cor de fundo do botão */
+    color: black; /* Cor do texto */
+    border: none; /* Remove bordas */
+    border-radius: 4px; /* Cantos arredondados */
+    padding: 10px 15px; /* Preenchimento interno */
+    cursor: pointer; /* Muda o cursor para mão */
+    font-size: 1em; /* Tamanho da fonte */
+    transition: background-color 0.3s ease; /* Efeito de transição */
+}
+
+.buttonRed:hover {
+    background-color: #c41717; /* Cor do botão ao passar o mouse */
+}
