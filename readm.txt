@@ -1,4 +1,4 @@
 
-para rodar o programa
+para rodar o programa cd comanda
 python manage.py migrate
 python manage.py runserver
